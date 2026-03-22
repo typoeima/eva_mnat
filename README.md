@@ -1,126 +1,82 @@
-# SiriusK8s — Практика по Kubernetes
+# SiriusK8s — Практика по Kubernetes и контейнеризации
 
-Добро пожаловать в учебную практику по развёртыванию Kubernetes-кластера и приложений.
+Учебная практика по технологиям виртуализации: от Linux namespaces и Docker до Kubernetes.
 
 ## Структура репозитория
 
 ```
 .
-├── README.md                  # Этот файл — общее описание практики
-├── kubernetes/
-│   ├── README.md              # Подробный гайд по установке кластера через kubeadm
-│   └── manifests/
-│       ├── gitlab/            # Манифесты GitLab
-│       ├── grafana/           # Манифесты Grafana
-│       ├── postgresql/        # Манифесты PostgreSQL
-│       ├── auth-service/      # Манифесты сервиса авторизации
-│       └── ingress/           # Ingress-правила для доменов
-├── auth-service/
-│   └── python/                # Исходный код сервиса авторизации (Python)
-└── docker/
-    └── README.md              # Практика по безопасности Docker-контейнеров
+├── README.md                  # Этот файл — обзор практики
+├── PRACTIC/                   # Материалы для практических занятий (7 пар)
+│   ├── README.md              # Расписание и сводка по парам
+│   ├── 1_Linux/               # Пара 1: Linux — namespaces, cgroups, chroot
+│   ├── 2_Docker_run/          # Пара 2: Docker — образы, Dockerfile, контейнеры
+│   ├── 3_Docker_net_vol/      # Пара 3: Docker — сети, volumes, docker-compose
+│   ├── 4_Kub_init/            # Пара 4: Kubernetes — установка, первые поды
+│   ├── 5_Kub_deploy/          # Пара 5: Deployment, Service, Ingress
+│   ├── 6_Kub_config/          # Пара 6: ConfigMap, Secret, PV/PVC
+│   └── 7_kub_security/        # Пара 7: RBAC, NetworkPolicy, Falco
+├── Students/                  # Списки групп и приём работ
+│   ├── README.md              # Инструкция по сдаче работ
+│   ├── K0109-23/              # Группа K0109-23
+│   ├── K0409-24-1/            # Группа K0409-24-1
+│   ├── K0409-24-2/            # Группа K0409-24-2
+│   └── K0609-23/              # Группа K0609-23
+├── docker/                    # Дополнительная практика: безопасность Docker
+│   └── README.md              # Взлом и защита контейнеров
+├── PRACTICAL_ASSIGNMENTS.md   # Подробные задания с критериями оценки
+├── CHEATSHEET.md              # Краткий справочник по kubectl
+└── RESOURCES.md               # Ссылки на документацию и подготовку к CKA/CKAD
 ```
-
-## Цель практики
-
-Научиться разворачивать production-подобный Kubernetes-кластер с нуля, используя только локальные виртуальные машины, и задеплоить в него реальные сервисы с настройкой Ingress на внутреннем домене `*.NN.sirius`.
 
 ---
 
-## Задания
+## 7 пар практики
 
-### 1. Подготовка виртуальных машин
-
-- Создать **3 ВМ** в одной локальной сети (VirtualBox / VMware / Vagrant / libvirt).
-- Рекомендуемая ОС: **Ubuntu 22.04 LTS** или **Rocky Linux 9**.
-- Убедиться, что с хост-машины (и между ВМ) работает SSH-доступ по ключу.
-- Назначить статические IP-адреса или настроить DNS-резолвинг имён хостов.
-
-| Роль          | Hostname       | Пример IP      |
-|---------------|----------------|----------------|
-| Master node   | k8s-master     | 192.168.56.10  |
-| Worker node 1 | k8s-worker-1   | 192.168.56.11  |
-| Worker node 2 | k8s-worker-2   | 192.168.56.12  |
-
-### 2. Установка Kubernetes через kubeadm
-
-Подробная инструкция: [kubernetes/README.md](kubernetes/README.md)
-
-- Установить `containerd`, `kubeadm`, `kubelet`, `kubectl` на все ноды.
-- Инициализировать master-ноду.
-- Подключить worker-ноды к кластеру.
-- Установить CNI-плагин (Flannel или Calico).
-
-### 3. Развёртывание приложений
-
-Все манифесты находятся в папке `kubernetes/manifests/`.
-
-| Приложение        | Namespace        | Директория                            |
-|-------------------|------------------|---------------------------------------|
-| GitLab            | `gitlab`         | `kubernetes/manifests/gitlab/`        |
-| Grafana           | `monitoring`     | `kubernetes/manifests/grafana/`       |
-| Сервис авторизации| `auth`           | `kubernetes/manifests/auth-service/`  |
-| PostgreSQL        | `auth`           | `kubernetes/manifests/postgresql/`    |
-
-#### 3.3 Сервис авторизации
-
-Написан на **Python (FastAPI)**. Реализует:
-- `POST /register` — регистрация пользователя (login + password).
-- `POST /login` — получение JWT-токена.
-- `GET /me` — проверка токена.
-
-Исходный код: [`auth-service/python/`](auth-service/python/)
-
-#### 3.4 PostgreSQL
-
-Разворачивается как `StatefulSet` с `PersistentVolumeClaim`.  
-Credentials хранятся в `Secret`. Подключается к сервису авторизации через переменные окружения.
-
-### 4. Ingress и внутренний DNS
-
-Формат домена:
-```
-<service>.<номер_группы>.sirius
-```
-Примеры:
-```
-gitlab.42.sirius
-grafana.42.sirius
-auth.42.sirius
-```
-
-Для разрешения этих имён нужен **локальный DNS-сервер**. Рекомендуется создать 4-ю ВМ на базе **RHEL / Rocky Linux** и развернуть на ней одно из решений:
-
-| Решение      | Сложность | Описание |
-|--------------|-----------|----------|
-| **FreeIPA**  | Высокая   | Полноценный LDAP + Kerberos + DNS. Корпоративный стандарт. |
-| **BIND9**    | Средняя   | Классический DNS-сервер. Простая конфигурация зон. |
-| **dnsmasq**  | Низкая    | Лёгкий DNS/DHCP. Идеален для dev-среды. |
-| **CoreDNS**  | Средняя   | Используется внутри K8s, можно вынести наружу. |
-
-> Рекомендуем начать с **dnsmasq** (быстро настроить), затем перейти на **BIND9** как на более промышленный вариант.
-
-Подробнее о настройке Ingress и DNS: [kubernetes/README.md#ingress](kubernetes/README.md)
+| Пара | Тема |
+|------|------|
+| 1 | Linux: namespaces, cgroups, chroot — основы контейнеризации |
+| 2 | Docker: образы, Dockerfile, запуск контейнеров |
+| 3 | Docker: сети, volumes, docker-compose |
+| 4 | Kubernetes: установка кластера, первые поды |
+| 5 | Kubernetes: Deployment, Service, Ingress |
+| 6 | Kubernetes: ConfigMap, Secret, PV/PVC |
+| 7 | Безопасность: RBAC, NetworkPolicy, Falco |
 
 ---
 
-### 5. Дополнительная практика: Безопасность Docker-контейнеров
+## Группы
 
-Практика по взлому и защите Docker-контейнеров:  
-[docker/README.md](docker/README.md)
+| Группа | Расписание (23–27 марта 2026) |
+|--------|------------------------------|
+| K0409-24-1 | пн 5-я, ср 4-я, чт 3-я |
+| K0409-24-2 | вт 5-я, ср 5-я, чт 5-я |
+| K0609-23 | пт 3-я |
+| K0109-23 | чт 4-я |
+
+Списки студентов и отметки о сдаче — в папках [`Students/K0109-23`](Students/K0109-23/), [`Students/K0409-24-1`](Students/K0409-24-1/), [`Students/K0409-24-2`](Students/K0409-24-2/), [`Students/K0609-23`](Students/K0609-23/).
 
 ---
 
-## Формат сдачи
+## Сдача работ
 
-Каждый участник отправляет работу в **отдельной ветке** этого репозитория по шаблону:
-```
-student/<фамилия>-<номер_группы>
-```
-Например: `student/ivanov-42`
+Формат ветки и папок: **`<номер_группы>/Фамилия`**  
+Пример: `K0109-23/ivanov`
 
-В ветке должны находиться:
-- Все манифесты с внесёнными изменениями (IP, домены, имена).
-- Исходный код сервисов.
-- Скриншоты или `kubectl get` / `kubectl describe` как доказательство работы.
-- При необходимости — дополнительный `REPORT.md` с описанием проблем и решений.
+- **Practic/** — основные задания по парам (`1_kub_intro`, `2_kub_deployment`, …)
+- **Extra/** — дополнительные задания
+
+Подробная инструкция: [Students/README.md](Students/README.md)
+
+Сдача через **pull request** в ветку `main`.
+
+---
+
+## Дополнительные материалы
+
+| Файл | Описание |
+|------|----------|
+| [PRACTICAL_ASSIGNMENTS.md](PRACTICAL_ASSIGNMENTS.md) | Подробные задания с критериями оценки |
+| [CHEATSHEET.md](CHEATSHEET.md) | Справочник по kubectl и Kubernetes |
+| [RESOURCES.md](RESOURCES.md) | Документация, CKA/CKAD, инструменты |
+| [docker/README.md](docker/README.md) | Практика по безопасности Docker-контейнеров |
