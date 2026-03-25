@@ -1,16 +1,44 @@
-# Группа K0409-24-1
+**`Практика 2`**
 
-| Last Name | First Name | Pair 1 | Pair 2 | Pair 3 | Pair 4 | Pair 5 | Pair 6 | Pair 7 | Extra |
-|-----------|------------|--------|--------|--------|--------|--------|--------|--------|-------|
-| Azarov | Artyom | | | | | | | | |
-| Bordunova | Alina | | | | | | | | |
-| Vezmentinova | Sofya | | | | | | | | |
-| Zakharenko | Nikita | | | | | | | | |
-| Kakablishvili | Karolina | | | | | | | | |
-| Karpets | Ekaterina | | | | | | | | |
-| Kudinova | Anastasia | | | | | | | | |
-| Naymushin | Maksim | | | | | | | | |
-| Ostrovskaya | Sofya | | | | | | | | |
-| Fokina | Darya | | | | | | | | |
-| Shevchenko | Vitaliy | | | | | | | | |
-| Yuryev | Dmitriy | | | | | | | | |
+**Контрольный вопрос:** Почему образ такой большой?
+
+Образ myapp:bad получается большим (~1.62 GB), потому что используется полный базовый образ python:3.12, который сам по себе оч много весит. Также отсутствует multistage build, из-за чего все инструменты сборки и временные файлы остаются в финальном образе. Нет .dockerignore, поэтому копируются все файлы, включая служебные и кееш
+
+
+![скрин](images/photo1.png)
+
+**Задания**
+
+Команда `docker images myapp` - показывает список всех докер образов, у которых в названии есть "myapp", с информацией об их размере, ID и дате создания
+
+![скрин](images/photo2.png)
+
+Команда `docker history myapp:good` - показывает историю создания образа
+
+![скрин](images/photo3.png)
+
+Команда `docker stats app-good` - показывает статистику использования ресурсов контейнера
+
+![скрин](images/photo4.png)
+
+Мой юрл на что то там - `https://hub.docker.com/r/alinaaaaaaaa777/flask-demo`
+
+
+**`Практика 3`**
+
+Команда `docker compose ps` — показывает список всех контейнеров текущего проекта
+
+![скрин](images/photo5.png)
+
+Команда `curl localhost:8080/api/items` — возвращает джсон всех записей из таблицы items
+
+![скрин](images/photo6.png)
+
+Комнада `--scale backend=3` — запускает три параллельных контейнера бекенд
+
+![скрин](images/photo7.png)
+
+Команда `docker compose ps` — показывает, что теперь запущено три экземпляра сервиса бекенд
+
+![скрин](images/photo8.png)
+
