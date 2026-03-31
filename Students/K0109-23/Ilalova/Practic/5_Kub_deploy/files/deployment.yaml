@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  labels:
+    app: webapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webapp
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # на 1 под больше разрешённых во время обновления
+      maxUnavailable: 0  # ни один под не падает во время обновления
+  template:
+    metadata:
+      labels:
+        app: webapp
+        version: v1
+    spec:
+      containers:
+      - name: webapp
+        image: nginxdemos/hello:plain-text   # показывает имя хоста
+        ports:
+        - containerPort: 80
+        resources:
+          requests: { cpu: "50m", memory: "32Mi" }
+          limits:   { cpu: "100m", memory: "64Mi" }
+        readinessProbe:
+          httpGet: { path: /, port: 80 }
+          initialDelaySeconds: 3
+          periodSeconds: 3

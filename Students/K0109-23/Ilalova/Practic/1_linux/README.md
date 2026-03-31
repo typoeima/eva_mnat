@@ -44,4 +44,4 @@ Namespaces это такой механизм, который позволяет
 
 ### 3. Chroot
 **Изоляция файловой системы:**
-![chroot](images/images5.png)git add "K0109-23/"
+![chroot](images/images5.png)

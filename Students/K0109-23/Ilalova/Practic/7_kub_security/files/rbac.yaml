@@ -1,0 +1,34 @@
+---
+# ServiceAccount для нашего приложения
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: app-reader
+  namespace: rbac-demo
+---
+# Role: только чтение подов в этом namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: rbac-demo
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch"]
+# Специально НЕ даём: create, delete, update
+---
+# RoleBinding: связываем SA с Role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-reader-binding
+  namespace: rbac-demo
+subjects:
+- kind: ServiceAccount
+  name: app-reader
+  namespace: rbac-demo
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
